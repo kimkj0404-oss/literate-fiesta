@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a2e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="산길트랙">
+<title>산길트랙 GPX TRACKER</title>
+<style>
+:root{--bg:#0d1a0d;--sf:#152015;--sf2:#1e301e;--bd:#2a422a;--ac:#4ade80;--warn:#fbbf24;--danger:#f87171;--tx:#e8f5e9;--tx2:#a5d6a7;--tx3:#6b9e6b}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:-apple-system,"Noto Sans KR",sans-serif}
+body{display:flex;flex-direction:column;height:100dvh}
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:8px}
+.logo .ic{width:32px;height:32px;background:linear-gradient(135deg,#4ade80,#22c55e);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo h1{font-size:16px;font-weight:700}
+.logo small{font-size:10px;color:var(--tx3);display:block;font-family:monospace}
+.hbtns{display:flex;gap:6px}
+.hbtn{width:36px;height:36px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all .15s}
+.hbtn:active{transform:scale(.9)}
+.hbtn.on{background:var(--ac);border-color:var(--ac);color:#0d1a0d}
+.tabs{display:flex;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
+.tab{flex:1;padding:9px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab .ti{font-size:18px}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden}
+.view.on{display:flex}
+#map-view{position:relative}
+#mc{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#mc:active{cursor:grabbing}
+.gps-bar{position:absolute;top:10px;left:10px;z-index:10;background:rgba(13,26,13,.9);border:1px solid var(--bd);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.gdot{width:8px;height:8px;border-radius:50%;background:var(--tx3)}
+.gdot.s{background:var(--warn);animation:p 1s infinite}
+.gdot.a{background:var(--ac);animation:p 2s infinite}
+.gdot.e{background:var(--danger)}
+@keyframes p{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.rec-b{position:absolute;top:10px;right:10px;z-index:10;display:none;background:rgba(248,113,113,.15);border:1px solid var(--danger);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;color:var(--danger);align-items:center;gap:5px}
+.rec-b.on{display:flex}
+.rdot{width:8px;height:8px;border-radius:50%;background:var(--danger);animation:p 1s infinite}
+.fabs{position:absolute;right:10px;bottom:90px;z-index:20;display:flex;flex-direction:column;gap:8px}
+.fabs.nav-on{bottom:175px}
+.fab{width:44px;height:44px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 10px rgba(0,0,0,.4);transition:all .15s}
+.fab:active{transform:scale(.9)}
+.fsm{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd)}
+.frec{background:var(--ac);color:#0d1a0d;width:52px;height:52px;font-size:22px;border-radius:14px}
+.frec.r{background:var(--danger)}
+.mstats{position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(0deg,rgba(13,26,13,.97) 0%,transparent 100%);padding:14px 16px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.st{text-align:center}
+.stv{font-family:monospace;font-size:15px;font-weight:700;color:var(--ac);line-height:1.1}
+.stl{font-size:9px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.estats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);flex-shrink:0}
+.es{background:var(--sf);padding:11px;text-align:center}
+.esv{font-family:monospace;font-size:16px;font-weight:700;color:var(--ac)}
+.esl{font-size:10px;color:var(--tx3);margin-top:2px}
+#ew{flex:1;padding:12px;position:relative;overflow:hidden}
+#ec{width:100%;height:100%;display:block}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--tx3);gap:8px}
+.empty .ei{font-size:48px}
+.empty p{font-size:13px;text-align:center;line-height:1.6}
+.thdr{padding:10px 14px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.thdr h2{font-size:15px;font-weight:700}
+.sort-btn{font-size:11px;font-weight:600;padding:5px 9px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer;transition:all .15s}
+.sort-btn.on{background:var(--ac);border-color:var(--ac);color:#0d1a0d}
+.tcard-row{display:flex;align-items:center;padding:12px 13px;border-bottom:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:background .15s;position:relative}
+.tcard-row:active{background:var(--sf2)}
+.tcard-row.sel{background:rgba(74,222,128,.07)}
+.tcard-bar{width:4px;position:absolute;left:0;top:0;bottom:0;border-radius:2px 0 0 2px}
+.tcard-main{flex:1;padding-left:12px;overflow:hidden}
+.tcard-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.tcard-meta{font-size:11px;color:var(--tx3);display:flex;gap:10px;flex-wrap:wrap}
+.tcard-meta b{color:var(--tx2)}
+.tcard-acts{display:flex;gap:6px;flex-shrink:0;margin-left:8px}
+.tcard-src{font-size:10px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:2px 6px;color:var(--tx3);margin-left:6px}
+.cbadge{font-size:11px;color:var(--tx3);font-family:monospace;background:var(--sf2);padding:3px 8px;border-radius:10px}
+.ulabel{display:flex;flex-direction:column;align-items:center;margin:14px 14px 0;border:2px dashed var(--bd);border-radius:16px;padding:22px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.ulabel:active{border-color:var(--ac);background:rgba(74,222,128,.05)}
+.ulabel .ui{font-size:30px;margin-bottom:6px}
+.ulabel p{font-size:13px;color:var(--tx2);font-weight:500}
+.ulabel small{font-size:11px;color:var(--tx3);margin-top:3px}
+#gi{display:none}
+.tlist{flex:1;overflow-y:auto;padding:10px 14px 14px}
+.tcard{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:13px 13px 13px 17px;margin-bottom:9px;position:relative;transition:all .15s}
+.tcard:active{transform:scale(.98)}
+.tcard.sel{border-color:var(--ac);background:rgba(74,222,128,.04)}
+.tcbar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:14px 0 0 14px}
+.tcn{font-size:14px;font-weight:700;margin-bottom:5px;padding-right:70px}
+.tcm{display:flex;gap:10px;flex-wrap:wrap}
+.tcp{font-size:11px;color:var(--tx3)}
+.tcp b{color:var(--tx2);font-weight:600}
+.tca{position:absolute;top:11px;right:11px;display:flex;gap:5px}
+.tcb{width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer}
+.tcb.vw{color:var(--ac);border-color:var(--ac);background:rgba(74,222,128,.1)}
+#settings-view{overflow-y:auto}
+.sec{padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sec h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin-bottom:10px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(42,66,42,.4)}
+.row:last-child{border-bottom:none}
+.row label{font-size:14px;font-weight:500}
+.row small{font-size:11px;color:var(--tx3);display:block;margin-top:1px}
+.tgl{width:44px;height:26px;background:var(--bd);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tgl::after{content:"";width:20px;height:20px;background:white;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s}
+.tgl.on{background:var(--ac)}
+.tgl.on::after{transform:translateX(18px)}
+.sel{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:6px 10px;font-size:13px;font-family:inherit}
+.ibtn{width:36px;height:36px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+.track-nav{position:absolute;bottom:80px;left:10px;right:10px;z-index:10;background:rgba(13,26,13,.95);border:1px solid var(--bd);border-radius:14px;padding:10px 13px;font-size:11px;color:var(--tx2)}
+.tnav-close{position:absolute;top:7px;right:10px;font-size:16px;color:var(--tx3);cursor:pointer;padding:2px 6px;line-height:1}
+.tnav-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tnav-row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnav-pct{font-family:monospace;font-size:13px;font-weight:700;color:var(--ac);flex-shrink:0}
+.tnav-bar-wrap{background:var(--bd);border-radius:4px;height:5px;margin:6px 0;overflow:hidden}
+.tnav-bar{height:100%;background:var(--ac);border-radius:4px;transition:width .4s}
+.fab-follow-on{background:var(--ac)!important;color:#0d1a0d!important}
+.manual-sec{border-bottom:1px solid var(--bd);padding:14px 0}
+.manual-h{font-size:12px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.manual-r{font-size:12px;color:var(--tx2);padding:4px 0;line-height:1.6}
+.manual-r b{color:var(--tx)}
+.wp-type-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:10px 4px;text-align:center;font-size:18px;cursor:pointer;color:var(--tx2);transition:all .15s}
+.wp-type-btn span{font-size:10px;display:block;margin-top:3px;color:var(--tx3)}
+.wp-type-btn.on{border-color:var(--ac);background:rgba(74,222,128,.12)}
+.wp-type-btn:active{transform:scale(.93)}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(30,48,30,.96);border:1px solid var(--ac);border-radius:20px;padding:9px 18px;font-size:13px;font-weight:500;color:var(--ac);z-index:9999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.mbg.on{display:flex}
+.modal{background:var(--sf);border-radius:22px 22px 0 0;width:100%;padding-bottom:36px;animation:su .28s ease}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhnd{width:38px;height:4px;background:var(--bd);border-radius:2px;margin:11px auto 14px}
+.mtitle{font-size:15px;font-weight:700;padding:0 18px 14px;border-bottom:1px solid var(--bd)}
+.mbody{padding:14px 18px}
+.mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.mc2{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:11px}
+.mc2 .v{font-family:monospace;font-size:18px;font-weight:700;color:var(--ac)}
+.mc2 .l{font-size:11px;color:var(--tx3);margin-top:2px}
+.mclose{width:100%;padding:13px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;color:var(--tx2);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="ic">&#127956;</div>
+    <div><h1>산길트랙</h1><small>GPX TRACKER</small></div>
+  </div>
+  <div class="hbtns">
+    <div class="hbtn" id="btn-gps" onclick="toggleTracking()">&#9210;</div>
+    <div class="hbtn" onclick="centerOnMe()">&#127919;</div>
+  </div>
+</header>
+<div class="tabs">
+  <div class="tab on" id="tab-map" onclick="switchTab('map')"><span class="ti">&#128506;</span>지도</div>
+  <div class="tab" id="tab-elev" onclick="switchTab('elev')"><span class="ti">&#128200;</span>고도</div>
+  <div class="tab" id="tab-tracks" onclick="switchTab('tracks')"><span class="ti">&#128194;</span>트랙</div>
+  <div class="tab" id="tab-settings" onclick="switchTab('settings')"><span class="ti">&#9881;&#65039;</span>설정</div>
+</div>
+<div class="view on" id="map-view">
+  <canvas id="mc"></canvas>
+  <div class="gps-bar"><div class="gdot" id="gdot"></div><span id="gtxt">GPS 대기</span></div>
+  <div class="rec-b" id="rb"><div class="rdot"></div>기록 중</div>
+  <div class="fabs">
+    <div class="fab fsm" onclick="mzoom(1)">+</div>
+    <div class="fab fsm" onclick="mzoom(-1)">-</div>
+    <div class="fab fsm" id="fab-follow" onclick="toggleFollow()" title="자동 따라가기">🔒</div>
+    <div class="fab frec" id="frec" onclick="toggleTracking()">&#9210;</div>
+  </div>
+  <div class="track-nav" id="track-nav" style="display:none">
+    <div class="tnav-close" onclick="document.getElementById('track-nav').style.display='none';document.querySelector('.mstats').style.paddingBottom='10px';document.querySelector('.fabs').classList.remove('nav-on')">✕</div>
+    <div class="tnav-row" style="padding-right:20px">
+      <span id="tnav-name">—</span>
+      <span id="tnav-pct" class="tnav-pct">0%</span>
+    </div>
+    <div class="tnav-bar-wrap"><div class="tnav-bar" id="tnav-bar"></div></div>
+    <div class="tnav-row" style="margin-top:4px">
+      <span>📍 트랙까지 <b id="tnav-dist">—</b>m</span>
+      <span>🏁 남은거리 <b id="tnav-remain">—</b>km</span>
+    </div>
+  </div>
+  <div class="mstats">
+    <div class="st"><div class="stv" id="sv1">0.00</div><div class="stl">거리 km</div></div>
+    <div class="st"><div class="stv" id="sv2">00:00</div><div class="stl">시간</div></div>
+    <div class="st"><div class="stv" id="sv3">&#8212;</div><div class="stl">고도 m</div></div>
+    <div class="st"><div class="stv" id="sv4">0.0</div><div class="stl">속도 km/h</div></div>
+  </div>
+</div>
+<div class="view" id="elev-view">
+  <div class="estats">
+    <div class="es"><div class="esv" id="em1">&#8212;</div><div class="esl">최저 m</div></div>
+    <div class="es"><div class="esv" id="em2">&#8212;</div><div class="esl">최고 m</div></div>
+    <div class="es"><div class="esv" id="em3">&#8212;</div><div class="esl">누적상승 m</div></div>
+  </div>
+  <div id="ew">
+    <canvas id="ec"></canvas>
+    <div class="empty" id="ee"><div class="ei">&#128202;</div><p>GPX 파일을 불러오면<br>고도 그래프가 표시됩니다</p></div>
+  </div>
+</div>
+<div class="view" id="tracks-view">
+  <div class="thdr">
+    <div style="display:flex;align-items:center;gap:8px">
+      <h2>트랙 목록</h2><span class="cbadge" id="cnt">0개</span>
+    </div>
+    <div style="display:flex;gap:5px">
+      <div class="sort-btn on" id="sort-date" onclick="setSortMode('date')">날짜순</div>
+      <div class="sort-btn" id="sort-name" onclick="setSortMode('name')">이름순</div>
+      <div class="sort-btn" id="sort-dist" onclick="setSortMode('dist')">거리순</div>
+    </div>
+  </div>
+  <label class="ulabel" for="gi">
+    <div class="ui">&#128193;</div>
+    <p>GPX 파일 불러오기</p>
+    <small>산길샘 포함 모든 GPX 지원</small>
+  </label>
+  <input type="file" id="gi" accept=".gpx" multiple>
+  <div class="tlist" id="tlist">
+    <div class="empty" style="position:relative;padding:30px 0" id="te">
+      <div class="ei">&#128194;</div><p>저장된 트랙이 없습니다<br>GPX 파일을 불러오세요</p>
+    </div>
+  </div>
+</div>
+<div class="view" id="settings-view">
+  <div class="sec"><h3>지도</h3>
+    <div class="row"><div><label>지도 종류</label></div>
+      <select class="sel" id="mtype" onchange="changeMapType(this.value)">
+        <option value="naver">네이버 지도 (최신)</option>
+        <option value="topo">지형도 (등고선)</option>
+        <option value="satellite">구글 위성</option>
+        <option value="osm">OpenStreetMap</option>
+      </select></div>
+    <div class="row"><div><label>트랙 색상</label></div>
+      <select class="sel" id="tcolor" onchange="S.tc=this.value">
+        <option value="#ff4444">빨강</option>
+        <option value="#4ade80">초록</option>
+        <option value="#60a5fa">파랑</option>
+        <option value="#fbbf24">노랑</option>
+      </select></div>
+  </div>
+  <div class="sec"><h3>기록</h3>
+    <div class="row"><div><label>화면 유지</label><small>트래킹 중 화면 켜두기</small></div>
+      <div class="tgl on" id="twake" onclick="this.classList.toggle('on')"></div></div>
+  </div>
+  <div class="sec"><h3>내보내기</h3>
+    <div class="row"><div><label>GPX 저장</label><small>현재 기록된 트랙</small></div>
+      <div class="ibtn" onclick="exportGPX()">&#128190;</div></div>
+  </div>
+  <div class="sec" style="border:none"><h3>정보</h3>
+    <div class="row"><label>버전</label><span style="font-size:12px;color:var(--tx3);font-family:monospace">v1.1.0</span></div>
+    <div class="row" style="cursor:pointer" onclick="toggleManual()"><label>📖 사용설명서</label><span style="color:var(--tx3)" id="manual-arrow">▼ 펼치기</span></div>
+  </div>
+  <div id="manual-box" style="display:none;padding:0 16px 24px">
+    <div class="manual-sec">
+      <div class="manual-h">🗺 지도 탭</div>
+      <div class="manual-r">👆 <b>드래그</b> — 지도 이동</div>
+      <div class="manual-r">🤏 <b>핀치</b> — 확대/축소 (또는 +/- 버튼)</div>
+      <div class="manual-r">🎯 <b>버튼</b> — 내 위치로 이동</div>
+      <div class="manual-r">🔒 <b>버튼</b> — 자동 따라가기 ON/OFF. 드래그하면 자동 해제(🔓)</div>
+      <div class="manual-r">⏱ <b>1초 길게 누르기</b> — 웨이포인트 등록 팝업</div>
+      <div class="manual-r">🔴 <b>버튼</b> — 이동 경로 실시간 녹화 시작/중지</div>
+    </div>
+    <div class="manual-sec">
+      <div class="manual-h">📡 GPS 표시</div>
+      <div class="manual-r">🟢 <b>초록 점</b> — 현재 내 위치</div>
+      <div class="manual-r">▲ <b>화살표</b> — 트랙 진행 방향 (GPX 기준 자동 정렬, 역방향 자동 감지)</div>
+      <div class="manual-r">⭕ <b>반투명 원</b> — GPS 정확도 범위</div>
+      <div class="manual-r">- - <b>점선</b> — 내 위치 → 트랙 최단거리</div>
+      <div class="manual-r">📊 <b>진행 바</b> — 진행률 % · 트랙까지 거리 · 남은 거리</div>
+    </div>
+    <div class="manual-sec">
+      <div class="manual-h">📁 트랙 탭</div>
+      <div class="manual-r">📂 <b>GPX 불러오기</b> — 파일 선택 시 다운로드 폴더에 자동 백업</div>
+      <div class="manual-r">👁 <b>버튼</b> — 상세 정보 팝업 (거리·시간·고도·속도·웨이포인트)</div>
+      <div class="manual-r">🗺 <b>지도 보기</b> — 해당 트랙을 지도에 표시</div>
+      <div class="manual-r">🗑 <b>버튼</b> — 트랙 삭제</div>
+      <div class="manual-r">💾 <b>GPX 저장</b> — 웨이포인트 포함 .gpx 파일로 내보내기</div>
+    </div>
+    <div class="manual-sec">
+      <div class="manual-h">📍 웨이포인트 종류</div>
+      <div class="manual-r">📍기본 &nbsp;💧식수대 &nbsp;⚠️위험구간 &nbsp;🔺정상</div>
+      <div class="manual-r">🏕️대피소 &nbsp;🚻화장실 &nbsp;🅿️주차장 &nbsp;🍱식당 &nbsp;ℹ️안내판</div>
+    </div>
+    <div class="manual-sec">
+      <div class="manual-h">📈 고도 탭</div>
+      <div class="manual-r">GPX 트랙의 고도 그래프 · 최저/최고 고도 · 누적 상승 확인</div>
+    </div>
+    <div class="manual-sec" style="border:none">
+      <div class="manual-h">💡 팁</div>
+      <div class="manual-r">GPX 불러오기 시 다운로드 폴더에 자동 백업 저장됩니다</div>
+      <div class="manual-r">등산 중 웨이포인트 등록 후 GPX 저장하면 다음에도 지도에 표시됩니다</div>
+      <div class="manual-r">GPX 파일에 웨이포인트가 있으면 지도에 자동으로 마커가 표시됩니다</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="mbg" id="mbg" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhnd"></div>
+    <div class="mtitle" id="mn">트랙 정보</div>
+    <div class="mbody">
+      <div class="mgrid">
+        <div class="mc2"><div class="v" id="md1">&#8212;</div><div class="l">📏 거리 km</div></div>
+        <div class="mc2"><div class="v" id="md2">&#8212;</div><div class="l">⏱ 소요 시간</div></div>
+        <div class="mc2"><div class="v" id="md3">&#8212;</div><div class="l">⛰ 최고 고도 m</div></div>
+        <div class="mc2"><div class="v" id="md4">&#8212;</div><div class="l">🔺 최저 고도 m</div></div>
+        <div class="mc2"><div class="v" id="md5">&#8212;</div><div class="l">📈 누적 상승 m</div></div>
+        <div class="mc2"><div class="v" id="md6">&#8212;</div><div class="l">🚶 평균 속도 km/h</div></div>
+        <div class="mc2"><div class="v" id="md7">&#8212;</div><div class="l">⚡ 최고 속도 km/h</div></div>
+        <div class="mc2"><div class="v" id="md8">&#8212;</div><div class="l">📌 포인트 수</div></div>
+      </div>
+      <div id="md-time" style="background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:11px;margin-bottom:10px;font-size:12px;color:var(--tx2);line-height:1.8"></div>
+      <div id="md-wp" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📍 웨이포인트</div>
+        <div id="md-wplist" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="mclose" style="flex:1" onclick="goToTrackMap()">🗺 지도 보기</button>
+        <button class="mclose" style="flex:1" onclick="closeModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mbg" id="wp-mbg" onclick="closeWpModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhnd"></div>
+    <div class="mtitle">📍 웨이포인트 등록</div>
+    <div class="mbody">
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">종류 선택</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="wp-type-grid">
+          <div class="wp-type-btn on" data-sym="📍" data-type="waypoint" onclick="selectWpType(this)">📍<br><span>기본</span></div>
+          <div class="wp-type-btn" data-sym="💧" data-type="water" onclick="selectWpType(this)">💧<br><span>식수대</span></div>
+          <div class="wp-type-btn" data-sym="⚠️" data-type="danger" onclick="selectWpType(this)">⚠️<br><span>위험구간</span></div>
+          <div class="wp-type-btn" data-sym="🔺" data-type="summit" onclick="selectWpType(this)">🔺<br><span>정상</span></div>
+          <div class="wp-type-btn" data-sym="🏕️" data-type="camp" onclick="selectWpType(this)">🏕️<br><span>대피소</span></div>
+          <div class="wp-type-btn" data-sym="🚻" data-type="toilet" onclick="selectWpType(this)">🚻<br><span>화장실</span></div>
+          <div class="wp-type-btn" data-sym="🅿️" data-type="parking" onclick="selectWpType(this)">🅿️<br><span>주차장</span></div>
+          <div class="wp-type-btn" data-sym="🍱" data-type="food" onclick="selectWpType(this)">🍱<br><span>식당</span></div>
+          <div class="wp-type-btn" data-sym="ℹ️" data-type="info" onclick="selectWpType(this)">ℹ️<br><span>안내판</span></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">이름 (선택)</div>
+        <input id="wp-name-input" type="text" placeholder="예: 칼바위 식수대" style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:10px 12px;font-size:14px;font-family:inherit;outline:none">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">메모 (선택)</div>
+        <input id="wp-desc-input" type="text" placeholder="예: 등산로 우측 약수터" style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:10px 12px;font-size:14px;font-family:inherit;outline:none">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="mclose" style="flex:1;background:var(--ac);color:#0d1a0d;border-color:var(--ac)" onclick="confirmAddWp()">✅ 등록</button>
+        <button class="mclose" style="flex:1" onclick="closeWpModal()">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const S={cx:127.5,cy:36.6,zoom:7,mtype:"naver",tiles:{},drag:false,ds:null,do_:null,gps:null,wid:null,
+  isRec:false,pts:[],dist:0,lpos:null,tstart:null,timer:null,tc:"#ff4444",
+  tracks:[],active:null,wl:null,
+  waypoints:[],wpPending:null,wpSym:"📍",wpType:"waypoint",longPressTimer:null,follow:true,trackIdx:0};
+
+const mc=document.getElementById("mc");
+const ctx=mc.getContext("2d");
+
+function resize(){
+  const v=document.getElementById("map-view");
+  if(v) { mc.width=v.clientWidth; mc.height=v.clientHeight; draw(); }
+}
+
+function l2t(lon,lat,z){
+  const n=2**z;
+  return{x:Math.floor((lon+180)/360*n),
+         y:Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n)};
+}
+
+function ll2px(lon,lat){
+  const W=mc.width,H=mc.height,ts=256,n=2**S.zoom;
+  const cx=(S.cx+180)/360*n;
+  const cy=(1-Math.log(Math.tan(S.cy*Math.PI/180)+1/Math.cos(S.cy*Math.PI/180))/Math.PI)/2*n;
+  const px=(lon+180)/360*n;
+  const py=(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n;
+  return{x:(px-cx)*ts+W/2, y:(py-cy)*ts+H/2};
+}
+
+function turl(tx,ty,z,t){
+  const s=(tx+ty)%3;
+  const abc=["a","b","c"][s];
+  const u={
+    naver:"https://map.pstatic.net/nrb/styles/basic/1714378887/"+z+"/"+tx+"/"+ty+".png?mt=bg.ol.sw",
+    topo:"https://tile.opentopomap.org/"+z+"/"+tx+"/"+ty+".png",
+    satellite:"https://mt"+s+".google.com/vt/lyrs=s&x="+tx+"&y="+ty+"&z="+z,
+    osm:"https://"+abc+".tile.openstreetmap.org/"+z+"/"+tx+"/"+ty+".png"
+  };
+  return u[t]||u.naver;
+}
+
+function draw(){
+  const W=mc.width,H=mc.height;
+  if(!W||!H)return;
+  ctx.fillStyle="#1a2e1a"; ctx.fillRect(0,0,W,H);
+  const ts=256,n=2**S.zoom;
+  const cxt=(S.cx+180)/360*n;
+  const cyt=(1-Math.log(Math.tan(S.cy*Math.PI/180)+1/Math.cos(S.cy*Math.PI/180))/Math.PI)/2*n;
+  const sx=Math.floor(cxt-W/ts/2)-1, sy=Math.floor(cyt-H/ts/2)-1;
+  const ex=Math.ceil(cxt+W/ts/2)+1, ey=Math.ceil(cyt+H/ts/2)+1;
+  for(let ty=sy;ty<=ey;ty++){for(let tx=sx;tx<=ex;tx++){
+    if(tx<0||ty<0||tx>=n||ty>=n)continue;
+    const px=(tx-cxt)*ts+W/2, py=(ty-cyt)*ts+H/2;
+    const k=S.mtype+"-"+S.zoom+"-"+tx+"-"+ty;
+    if(S.tiles[k]&&S.tiles[k].complete&&S.tiles[k].naturalWidth>0){
+      ctx.drawImage(S.tiles[k],px,py,ts,ts);
+    } else if(!S.tiles[k]){
+      const img=new Image();
+      img.onload=()=>draw();
+      img.onerror=()=>{delete S.tiles[k]};
+      img.src=turl(tx,ty,S.zoom,S.mtype);
+      S.tiles[k]=img;
+      ctx.fillStyle="#152015"; ctx.fillRect(px,py,ts,ts);
+      ctx.strokeStyle="#2a422a"; ctx.strokeRect(px,py,ts,ts);
+    }
+  }}
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(0,0,W,H);
+  S.tracks.forEach(t=>drawTr(t));
+  if(S.pts.length>1){
+    ctx.beginPath(); ctx.strokeStyle=S.tc; ctx.lineWidth=4; ctx.lineJoin="round"; ctx.lineCap="round";
+    S.pts.forEach((p,i)=>{const{x,y}=ll2px(p.lng,p.lat);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.stroke();
+  }
+  // 웨이포인트 마커 그리기
+  const allWps=[];
+  S.tracks.forEach(t=>{if(t.waypoints)t.waypoints.forEach(w=>allWps.push(w))});
+  S.waypoints.forEach(w=>allWps.push(w));
+  allWps.forEach(w=>{
+    const{x,y}=ll2px(w.lng,w.lat);
+    if(x<-30||x>mc.width+30||y<-30||y>mc.height+30)return;
+    ctx.beginPath(); ctx.arc(x,y,14,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.92)"; ctx.fill();
+    ctx.strokeStyle="#333"; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.font="16px serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(w.sym||"📍",x,y);
+    if(w.name){
+      ctx.font="bold 11px -apple-system,sans-serif";
+      ctx.fillStyle="white"; ctx.textAlign="center";
+      ctx.strokeStyle="rgba(0,0,0,0.7)"; ctx.lineWidth=3;
+      ctx.strokeText(w.name,x,y+22);
+      ctx.fillText(w.name,x,y+22);
+    }
+  });
+  if(S.gps){
+    const{x,y}=ll2px(S.gps.lng,S.gps.lat);
+    // 정확도 원
+    if(S.gps.acc&&S.gps.acc<200){
+      const accR=S.gps.acc/metersPerPixel();
+      ctx.beginPath(); ctx.arc(x,y,accR,0,Math.PI*2);
+      ctx.fillStyle="rgba(74,222,128,.1)"; ctx.fill();
+      ctx.strokeStyle="rgba(74,222,128,.3)"; ctx.lineWidth=1; ctx.stroke();
+    }
+    // 트랙 매칭 - 가장 가까운 포인트에 선 연결
+    if(S.active&&S.active.points&&S.active.points.length>1){
+      const np=nearestPoint(S.gps.lat,S.gps.lng,S.active.points);
+      if(np){
+        const{x:nx,y:ny}=ll2px(np.point.lng,np.point.lat);
+        ctx.beginPath(); ctx.setLineDash([4,4]);
+        ctx.strokeStyle="rgba(74,222,128,.6)"; ctx.lineWidth=2;
+        ctx.moveTo(x,y); ctx.lineTo(nx,ny); ctx.stroke();
+        ctx.setLineDash([]);
+        // 트랙 위 매칭 포인트 강조
+        ctx.beginPath(); ctx.arc(nx,ny,6,0,Math.PI*2);
+        ctx.fillStyle="#4ade80"; ctx.fill();
+        ctx.strokeStyle="white"; ctx.lineWidth=2; ctx.stroke();
+      }
+    }
+    // 방향 화살표 - GPX 트랙 방향 기준
+    {
+      let arrowAngle=null;
+      if(S.active&&S.active.points&&S.active.points.length>1){
+        const pts=S.active.points;
+        const np=nearestPoint(S.gps.lat,S.gps.lng,pts);
+        if(np){
+          const idx=np.idx;
+          // 트랙의 앞뒤 포인트로 트랙 방향 계산
+          const prev=idx>0?pts[idx-1]:null;
+          const next=idx<pts.length-1?pts[idx+1]:null;
+          let trackAngle=null;
+          if(next){
+            // 트랙 진행 방향 (현재→다음)
+            trackAngle=Math.atan2(next.lng-pts[idx].lng, next.lat-pts[idx].lat);
+          } else if(prev){
+            trackAngle=Math.atan2(pts[idx].lng-prev.lng, pts[idx].lat-prev.lat);
+          }
+          if(trackAngle!==null){
+            // 내 이동 방향 (GPS heading)
+            const myAngle=S.gps.heading!=null&&!isNaN(S.gps.heading)
+              ? S.gps.heading*Math.PI/180
+              : null;
+            if(myAngle!==null){
+              // 내 방향과 트랙 방향의 각도 차이
+              let diff=myAngle-trackAngle;
+              while(diff>Math.PI)diff-=2*Math.PI;
+              while(diff<-Math.PI)diff+=2*Math.PI;
+              // 90도 이상 차이나면 역방향 → 반대로
+              arrowAngle=Math.abs(diff)>Math.PI/2 ? trackAngle+Math.PI : trackAngle;
+            } else {
+              arrowAngle=trackAngle;
+            }
+            // canvas 좌표계 보정 (위쪽=북쪽)
+            arrowAngle = -arrowAngle + Math.PI/2;
+          }
+        }
+      } else {
+        // 트랙 없을 때: GPS heading 있으면 그걸로, 없으면 북쪽(0도) 기본 표시
+        arrowAngle=S.gps.heading!=null&&!isNaN(S.gps.heading)
+          ? S.gps.heading*Math.PI/180
+          : 0; // 북쪽 기본값
+      }
+      if(arrowAngle!==null){
+        ctx.save(); ctx.translate(x,y); ctx.rotate(arrowAngle);
+        ctx.beginPath(); ctx.moveTo(0,-16); ctx.lineTo(6,4); ctx.lineTo(0,0); ctx.lineTo(-6,4); ctx.closePath();
+        ctx.fillStyle="#4ade80"; ctx.fill();
+        ctx.strokeStyle="white"; ctx.lineWidth=1; ctx.stroke();
+        ctx.restore();
+      }
+    }
+    // GPS 마커
+    ctx.beginPath(); ctx.arc(x,y,14,0,Math.PI*2); ctx.fillStyle="rgba(74,222,128,.25)"; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle="white"; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2); ctx.fillStyle="#4ade80"; ctx.fill();
+  }
+}
+
+function metersPerPixel(){
+  const lat=S.cy*Math.PI/180;
+  return 156543.03392*Math.cos(lat)/Math.pow(2,S.zoom);
+}
+
+function nearestPoint(lat,lng,pts){
+  let minD=Infinity,minI=0;
+  for(let i=0;i<pts.length;i++){
+    const d=hav(lat,lng,pts[i].lat,pts[i].lng);
+    if(d<minD){minD=d;minI=i;}
+  }
+  // 100m 이상 떨어지면 null (트랙 벗어남)
+  if(minD>300)return null;
+  return{point:pts[minI],idx:minI,dist:minD};
+}
+
+function drawTr(t){
+  if(!t.points||t.points.length<2)return;
+  ctx.beginPath(); ctx.strokeStyle=t.color||"#4488ff"; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.lineCap="round";
+  t.points.forEach((p,i)=>{const{x,y}=ll2px(p.lng,p.lat);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.stroke();
+}
+
+let pd=null,z0=null;
+mc.addEventListener("touchstart",e=>{
+  if(e.touches.length===1){
+    S.drag=true;
+    S.ds={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    S.do_={cx:S.cx,cy:S.cy};
+    // 롱프레스 타이머 (800ms)
+    const cx=e.touches[0].clientX, cy=e.touches[0].clientY;
+    S.longPressTimer=setTimeout(()=>{
+      if(!S.drag||Math.abs(S.ds.x-cx)<8&&Math.abs(S.ds.y-cy)<8){
+        const ll=px2ll(cx,cy);
+        openWpModal(ll.lat,ll.lng);
+        S.drag=false;
+      }
+    },800);
+  } else if(e.touches.length===2){
+    S.drag=false;
+    clearTimeout(S.longPressTimer);
+    pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    z0=S.zoom;
+  }
+},{passive:true});
+mc.addEventListener("touchmove",e=>{
+  e.preventDefault();
+  if(e.touches.length===1&&S.drag&&S.ds){
+    const dx=e.touches[0].clientX-S.ds.x,dy=e.touches[0].clientY-S.ds.y;
+    // 조금이라도 움직이면 롱프레스 취소 + 자동 따라가기 해제
+    if(Math.abs(dx)>6||Math.abs(dy)>6){
+      clearTimeout(S.longPressTimer);
+      if(S.follow){S.follow=false;const b=document.getElementById("fab-follow");b.classList.remove("fab-follow-on");b.textContent="🔓";}
+    }
+    const ts=256,n=2**S.zoom;
+    S.cx=S.do_.cx-(dx/ts)*(360/n);
+    const cy0=(1-Math.log(Math.tan(S.do_.cy*Math.PI/180)+1/Math.cos(S.do_.cy*Math.PI/180))/Math.PI)/2*n;
+    const cyn=cy0-(dy/ts);
+    S.cy=Math.atan(Math.sinh(Math.PI*(1-2*cyn/n)))*180/Math.PI;
+    draw();
+  }else if(e.touches.length===2&&pd!==null){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const nz=Math.min(19,Math.max(3,Math.round(z0+Math.log2(d/pd))));
+    if(nz!==S.zoom){S.zoom=nz;draw()}
+  }
+},{passive:false});
+mc.addEventListener("touchend",()=>{S.drag=false;pd=null;clearTimeout(S.longPressTimer);});
+mc.addEventListener("mousedown",e=>{S.drag=true;S.ds={x:e.clientX,y:e.clientY};S.do_={cx:S.cx,cy:S.cy}});
+mc.addEventListener("mousemove",e=>{
+  if(!S.drag)return;
+  // 드래그 시 자동 따라가기 해제
+  if(S.follow){S.follow=false;const b=document.getElementById("fab-follow");b.classList.remove("fab-follow-on");b.textContent="🔓";}
+  const dx=e.clientX-S.ds.x,dy=e.clientY-S.ds.y,ts=256,n=2**S.zoom;
+  S.cx=S.do_.cx-(dx/ts)*(360/n);
+  const cy0=(1-Math.log(Math.tan(S.do_.cy*Math.PI/180)+1/Math.cos(S.do_.cy*Math.PI/180))/Math.PI)/2*n;
+  const cyn=cy0-(dy/ts);
+  S.cy=Math.atan(Math.sinh(Math.PI*(1-2*cyn/n)))*180/Math.PI;
+  draw();
+});
+mc.addEventListener("mouseup",()=>S.drag=false);
+mc.addEventListener("wheel",e=>{e.preventDefault();S.zoom=Math.min(19,Math.max(3,S.zoom+(e.deltaY<0?1:-1)));draw()},{passive:false});
+function mzoom(d){S.zoom=Math.min(19,Math.max(3,S.zoom+d));draw()}
+function changeMapType(t){S.mtype=t;S.tiles={};draw()}
+
+function setGPS(s,t){
+  document.getElementById("gdot").className="gdot "+s;
+  document.getElementById("gtxt").textContent=t||{s:"탐색 중",a:"GPS 활성",e:"GPS 오류"}[s];
+}
+
+function requestGPS(){
+  setGPS("s");
+  if(!navigator.geolocation){setGPS("e","GPS 미지원");return}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    S.cy=pos.coords.latitude; S.cx=pos.coords.longitude;
+    S.gps={lat:S.cy,lng:S.cx}; S.zoom=15;
+    setGPS("a","±"+Math.round(pos.coords.accuracy)+"m"); draw();
+  }, err=>{
+    const msg={1:"위치 권한 필요",2:"위치 신호 없음",3:"GPS 응답 없음"};
+    setGPS("e", msg[err.code]||"GPS 오류");
+    // 10초 후 자동 재시도 (권한 허용 후 자동 반영)
+    setTimeout(requestGPS, 10000);
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
+}
+
+function toggleTracking(){S.isRec?stopRec():startRec()}
+
+function startRec(){
+  if(!navigator.geolocation){toast("GPS 사용 불가");return}
+  S.isRec=true; S.pts=[]; S.dist=0; S.lpos=null; S.tstart=Date.now();
+  document.getElementById("frec").textContent="⏹"; document.getElementById("frec").classList.add("r");
+  document.getElementById("rb").classList.add("on"); document.getElementById("btn-gps").classList.add("on");
+  S.timer=setInterval(()=>{
+    const s=Math.floor((Date.now()-S.tstart)/1000),m=Math.floor(s/60),h=Math.floor(m/60);
+    document.getElementById("sv2").textContent=h>0?h+":"+p2(m%60)+":"+p2(s%60):p2(m)+":"+p2(s%60);
+  },1000);
+  S.wid=navigator.geolocation.watchPosition(onGPS, err=>{
+    const msg={1:"위치 권한 필요",2:"위치 신호 없음",3:"GPS 응답 없음"};
+    setGPS("e", msg[err.code]||"GPS 오류");
+    // 권한 거부가 아닌 경우 5초 후 자동 재시도
+    if(err.code!==1){
+      setTimeout(()=>{
+        if(S.isRec&&S.wid){
+          navigator.geolocation.clearWatch(S.wid);
+          S.wid=navigator.geolocation.watchPosition(onGPS, e=>{
+            setGPS("e", msg[e.code]||"GPS 오류");
+          },{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+          setGPS("s","재연결 중...");
+        }
+      },5000);
+    }
+  },{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+  setGPS("a","기록 중"); toast("트래킹 시작");
+  if(document.getElementById("twake").classList.contains("on")&&"wakeLock" in navigator)
+    navigator.wakeLock.request("screen").then(wl=>S.wl=wl).catch(()=>{});
+}
+
+function stopRec(){
+  S.isRec=false;
+  if(S.wid){navigator.geolocation.clearWatch(S.wid);S.wid=null}
+  clearInterval(S.timer);
+  document.getElementById("frec").textContent="⏺"; document.getElementById("frec").classList.remove("r");
+  document.getElementById("rb").classList.remove("on"); document.getElementById("btn-gps").classList.remove("on");
+  if(S.wl){S.wl.release();S.wl=null}
+  setGPS("a","GPS 활성");
+  if(S.pts.length>2){saveTrack();toast("완료 · "+document.getElementById("sv1").textContent+"km")}
+  else toast("트래킹 중지");
+}
+
+function onGPS(pos){
+  const{latitude:lat,longitude:lng,altitude:ele,speed,accuracy,heading}=pos.coords;
+  S.gps={lat,lng,acc:accuracy,heading:heading||null};
+  setGPS("a","±"+Math.round(accuracy)+"m");
+
+  // 자동 따라가기 - 지도 중심을 내 위치로
+  if(S.follow){
+    S.cx=lng; S.cy=lat;
+  }
+
+  if(S.isRec){
+    const pt={lat,lng,ele:ele||0,time:pos.timestamp};
+    S.pts.push(pt);
+    if(S.lpos)S.dist+=hav(S.lpos.lat,S.lpos.lng,lat,lng);
+    S.lpos=pt;
+    document.getElementById("sv1").textContent=(S.dist/1000).toFixed(2);
+    document.getElementById("sv3").textContent=ele?Math.round(ele):"—";
+    document.getElementById("sv4").textContent=speed?(speed*3.6).toFixed(1):"0.0";
+  } else {
+    // 기록 중이 아닐 때도 고도/속도 표시
+    document.getElementById("sv3").textContent=ele?Math.round(ele):"—";
+    document.getElementById("sv4").textContent=speed?(speed*3.6).toFixed(1):"0.0";
+  }
+
+  // 트랙 진행 정보 업데이트
+  updateTrackNav(lat,lng);
+  draw();
+}
+
+function updateTrackNav(lat,lng){
+  const nav=document.getElementById("track-nav");
+  if(!S.active||!S.active.points||S.active.points.length<2){
+    nav.style.display="none";
+    document.querySelector(".mstats").style.paddingBottom="10px";
+    document.querySelector(".fabs").classList.remove("nav-on");
+    return;
+  }
+  nav.style.display="block";
+  document.querySelector(".mstats").style.paddingBottom="85px";
+  document.querySelector(".fabs").classList.add("nav-on");
+  const pts=S.active.points;
+  const np=nearestPoint(lat,lng,pts);
+
+  // 트랙 이름
+  document.getElementById("tnav-name").textContent=S.active.name;
+
+  if(np){
+    // 트랙까지 거리
+    document.getElementById("tnav-dist").textContent=Math.round(np.dist);
+
+    // 진행률 계산 (현재 인덱스 / 전체)
+    const pct=Math.round(np.idx/(pts.length-1)*100);
+    document.getElementById("tnav-pct").textContent=pct+"%";
+    document.getElementById("tnav-bar").style.width=pct+"%";
+
+    // 남은 거리 계산
+    let remain=0;
+    for(let i=np.idx;i<pts.length-1;i++)remain+=hav(pts[i].lat,pts[i].lng,pts[i+1].lat,pts[i+1].lng);
+    document.getElementById("tnav-remain").textContent=(remain/1000).toFixed(1);
+    S.trackIdx=np.idx;
+  } else {
+    // 트랙에서 300m 이상 이탈
+    document.getElementById("tnav-dist").textContent="300m↑";
+    document.getElementById("tnav-pct").textContent="이탈";
+    document.getElementById("tnav-bar").style.width="0%";
+    document.getElementById("tnav-remain").textContent="—";
+  }
+}
+
+function toggleFollow(){
+  S.follow=!S.follow;
+  const btn=document.getElementById("fab-follow");
+  if(S.follow){
+    btn.classList.add("fab-follow-on");
+    btn.textContent="🔒";
+    if(S.gps){S.cx=S.gps.lng;S.cy=S.gps.lat;draw();}
+    toast("자동 따라가기 켜짐");
+  } else {
+    btn.classList.remove("fab-follow-on");
+    btn.textContent="🔓";
+    toast("자동 따라가기 꺼짐");
+  }
+}
+
+function saveTrack(){
+  const ps=S.pts,elevs=ps.map(p=>p.ele).filter(e=>e>0);
+  let gain=0;
+  for(let i=1;i<ps.length;i++){const d=(ps[i].ele||0)-(ps[i-1].ele||0);if(d>0)gain+=d}
+  const now=new Date();
+  const t={id:Date.now(),name:"산행 "+now.getFullYear()+"-"+p2(now.getMonth()+1)+"-"+p2(now.getDate()),
+    points:[...ps],distance:S.dist,duration:Date.now()-S.tstart,
+    elevMin:elevs.length?Math.min(...elevs):null,elevMax:elevs.length?Math.max(...elevs):null,
+    elevGain:Math.round(gain),color:S.tc,source:"rec"};
+  S.tracks.unshift(t); S.active=t; 
+  
+  saveToStorage();
+  renderTracks(); drawElev(t);
+}
+
+function centerOnMe(){
+  if(S.gps){S.cx=S.gps.lng;S.cy=S.gps.lat;S.zoom=16;draw()}else requestGPS();
+}
+
+document.getElementById("gi").addEventListener("change",function(){
+  Array.from(this.files).forEach(loadGPX); this.value="";
+});
+
+function loadGPX(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    parseGPX(e.target.result,f.name);
+  };
+  r.onerror=()=>toast("파일 읽기 실패: "+f.name);
+  r.readAsText(f,"UTF-8");
+}
+
+function parseGPX(xml,fn){
+  try{
+    // BOM 제거
+    xml=xml.replace(/^\uFEFF/,"");
+    const doc=new DOMParser().parseFromString(xml,"application/xml");
+    const parseErr=doc.querySelector("parsererror");
+    if(parseErr){toast("GPX 파싱 오류 - 파일을 확인하세요");return;}
+    
+    const pts=[];
+    // trkpt 우선, 없으면 rtept 시도
+    // 네임스페이스 제거 후 재파싱 (가민, 산길샘 등 호환)
+    const cleanXml=xml.replace(/xmlns[^=]*="[^"]*"/g,"").replace(/\s+/g," ");
+    const doc2=new DOMParser().parseFromString(cleanXml,"application/xml");
+    
+    const ptNodes=doc2.querySelectorAll("trkpt").length>0
+      ? doc2.querySelectorAll("trkpt")
+      : doc2.querySelectorAll("rtept");
+    
+    ptNodes.forEach(pt=>{
+      const lat=parseFloat(pt.getAttribute("lat")),lng=parseFloat(pt.getAttribute("lon"));
+      const ele=pt.querySelector("ele"),time=pt.querySelector("time");
+      if(!isNaN(lat)&&!isNaN(lng))pts.push({
+        lat,lng,
+        ele:ele?parseFloat(ele.textContent):0,
+        time:time?new Date(time.textContent).getTime():null
+      });
+    });
+    if(!pts.length){toast("트랙 포인트가 없습니다");return;}
+    
+    // doc2로 이름/웨이포인트도 파싱
+    const nel=doc2.querySelector("trk > name")||doc2.querySelector("name");
+    
+    let dist=0;
+    for(let i=1;i<pts.length;i++)dist+=hav(pts[i-1].lat,pts[i-1].lng,pts[i].lat,pts[i].lng);
+    let gain=0;
+    for(let i=1;i<pts.length;i++){const d=(pts[i].ele||0)-(pts[i-1].ele||0);if(d>0)gain+=d;}
+    const elevs=pts.map(p=>p.ele).filter(e=>e>0);
+    
+    // 이름 파싱 (산길샘은 trk>name 사용)
+
+    const name=nel&&nel.textContent.trim()?nel.textContent.trim():fn.replace(/\.gpx$/i,"");
+    
+    // 시간 계산
+    const validTimes=pts.map(p=>p.time).filter(Boolean);
+    const dur=validTimes.length>=2?validTimes[validTimes.length-1]-validTimes[0]:null;
+    
+    // 웨이포인트 파싱
+    const waypoints=[];
+    doc2.querySelectorAll("wpt").forEach(w=>{
+      const lat=parseFloat(w.getAttribute("lat")),lng=parseFloat(w.getAttribute("lon"));
+      if(isNaN(lat)||isNaN(lng))return;
+      const wname=w.querySelector("name"),wdesc=w.querySelector("desc"),wele=w.querySelector("ele"),wsym=w.querySelector("sym");
+      waypoints.push({lat,lng,
+        name:wname?wname.textContent.trim():"",
+        desc:wdesc?wdesc.textContent.trim():"",
+        ele:wele?parseFloat(wele.textContent):null,
+        sym:wsym?wpSymIcon(wsym.textContent.trim()):""});
+    });
+    
+    const cols=["#ff4444","#4488ff","#44dd88","#ff8844","#cc44ff","#ffcc44"];
+    const t={
+      id:Date.now()+Math.random(),name,points:pts,waypoints,distance:dist,duration:dur,
+      elevMin:elevs.length?Math.min(...elevs):null,
+      elevMax:elevs.length?Math.max(...elevs):null,
+      elevGain:Math.round(gain),
+      color:cols[S.tracks.length%cols.length],source:"gpx"
+    };
+    S.tracks.unshift(t); S.active=t;
+    // 화면 먼저 업데이트
+    renderTracks();
+    const lats=pts.map(p=>p.lat),lngs=pts.map(p=>p.lng);
+    S.cy=(Math.min(...lats)+Math.max(...lats))/2; S.cx=(Math.min(...lngs)+Math.max(...lngs))/2;
+    S.zoom=fitZoom(Math.min(...lats),Math.max(...lats),Math.min(...lngs),Math.max(...lngs));
+    draw(); drawElev(t);
+    toast("\""+name+"\" 불러옴 · "+(dist/1000).toFixed(1)+"km · "+pts.length+"pt");
+    switchTab("map");
+    // 저장은 비동기로 나중에
+    setTimeout(()=>saveToStorage(), 100);
+  }catch(e){
+    toast("GPX 파일 오류: "+e.message);
+    console.error("parseGPX error",e);
+  }
+}
+
+function fitZoom(la,lb,na,nb){
+  const dl=lb-la,dn=nb-na,W=mc.width||400,H=mc.height||600;
+  for(let z=16;z>=3;z--){const n=2**z,ts=256;if((dn/360*n*ts)<W*.8&&(dl/180*n*ts)<H*.6)return z}return 10;
+}
+
+function drawElev(track){
+  const elevs=track.points.map(p=>p.ele||0),nz=elevs.filter(e=>e>0);
+  if(!nz.length){document.getElementById("ee").style.display="flex";return}
+  document.getElementById("ee").style.display="none";
+  const mn=Math.min(...nz),mx=Math.max(...nz);
+  let gain=0;
+  for(let i=1;i<track.points.length;i++){const d=(track.points[i].ele||0)-(track.points[i-1].ele||0);if(d>0)gain+=d}
+  document.getElementById("em1").textContent=Math.round(mn);
+  document.getElementById("em2").textContent=Math.round(mx);
+  document.getElementById("em3").textContent=Math.round(gain);
+  const ew=document.getElementById("ew");
+  const ec=document.getElementById("ec");
+  ec.width=ew.clientWidth; ec.height=ew.clientHeight;
+  const W=ec.width,H=ec.height,pad={t:20,r:16,b:30,l:46};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const ectx=ec.getContext("2d");
+  ectx.clearRect(0,0,W,H);
+  const pts=track.points,len=pts.length;
+  ectx.strokeStyle="#2a422a"; ectx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(i/4);
+    ectx.beginPath(); ectx.moveTo(pad.l,y); ectx.lineTo(pad.l+cw,y); ectx.stroke();
+    const val=Math.round(mx-(mx-mn)*(i/4));
+    ectx.fillStyle="#6b9e6b"; ectx.font="10px monospace"; ectx.textAlign="right";
+    ectx.fillText(val,pad.l-4,y+4);
+  }
+  const grad=ectx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,"rgba(74,222,128,0.6)"); grad.addColorStop(1,"rgba(74,222,128,0.05)");
+  ectx.beginPath();
+  pts.forEach((p,i)=>{
+    const x=pad.l+cw*(i/(len-1));
+    const e=p.ele>0?p.ele:mn;
+    const y=pad.t+ch*(1-(e-mn)/(mx-mn||1));
+    i===0?ectx.moveTo(x,y):ectx.lineTo(x,y);
+  });
+  const lastX=pad.l+cw; const lastPt=pts[len-1];
+  const lastY=pad.t+ch*(1-((lastPt.ele>0?lastPt.ele:mn)-mn)/(mx-mn||1));
+  ectx.lineTo(lastX,pad.t+ch); ectx.lineTo(pad.l,pad.t+ch); ectx.closePath();
+  ectx.fillStyle=grad; ectx.fill();
+  ectx.beginPath(); ectx.strokeStyle="#4ade80"; ectx.lineWidth=2;
+  pts.forEach((p,i)=>{
+    const x=pad.l+cw*(i/(len-1));
+    const e=p.ele>0?p.ele:mn;
+    const y=pad.t+ch*(1-(e-mn)/(mx-mn||1));
+    i===0?ectx.moveTo(x,y):ectx.lineTo(x,y);
+  });
+  ectx.stroke();
+}
+
+function switchTab(name){
+  ["map","elev","tracks","settings"].forEach(n=>{
+    document.getElementById("tab-"+n).classList.toggle("on",n===name);
+    document.getElementById(n==="map"?"map-view":n==="elev"?"elev-view":n==="tracks"?"tracks-view":"settings-view").classList.toggle("on",n===name);
+  });
+  if(name==="map"){setTimeout(()=>{resize();},50);}
+  if(name==="elev"&&S.active)setTimeout(()=>drawElev(S.active),50);
+}
+
+function p2(n){return String(n).padStart(2,"0")}
+
+function px2ll(px,py){
+  const W=mc.width,H=mc.height,ts=256,n=2**S.zoom;
+  const cxt=(S.cx+180)/360*n;
+  const cyt=(1-Math.log(Math.tan(S.cy*Math.PI/180)+1/Math.cos(S.cy*Math.PI/180))/Math.PI)/2*n;
+  const tx=cxt+(px-W/2)/ts;
+  const ty=cyt+(py-H/2)/ts;
+  const lon=tx/n*360-180;
+  const lat=Math.atan(Math.sinh(Math.PI*(1-2*ty/n)))*180/Math.PI;
+  return{lat,lng:lon};
+}
+
+function openWpModal(lat,lng){
+  S.wpPending={lat,lng,ele:null};
+  // 현재 GPS 고도 있으면 사용
+  if(S.gps&&S.gps.lat===lat)S.wpPending.ele=S.gps.ele||null;
+  document.getElementById("wp-name-input").value="";
+  document.getElementById("wp-desc-input").value="";
+  // 기본 타입 초기화
+  document.querySelectorAll(".wp-type-btn").forEach(b=>b.classList.remove("on"));
+  document.querySelector(".wp-type-btn[data-type='waypoint']").classList.add("on");
+  S.wpSym="📍"; S.wpType="waypoint";
+  document.getElementById("wp-mbg").classList.add("on");
+  // 진동 피드백
+  if(navigator.vibrate)navigator.vibrate(40);
+}
+
+function closeWpModal(){
+  document.getElementById("wp-mbg").classList.remove("on");
+  S.wpPending=null;
+}
+
+function selectWpType(el){
+  document.querySelectorAll(".wp-type-btn").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+  S.wpSym=el.dataset.sym;
+  S.wpType=el.dataset.type;
+}
+
+function confirmAddWp(){
+  if(!S.wpPending)return;
+  const name=document.getElementById("wp-name-input").value.trim()||wpTypeLabel(S.wpType);
+  const desc=document.getElementById("wp-desc-input").value.trim();
+  const wp={lat:S.wpPending.lat,lng:S.wpPending.lng,ele:S.wpPending.ele,
+    name,desc,sym:S.wpSym,type:S.wpType,id:Date.now()};
+  // 활성 트랙이 있으면 트랙에 추가, 없으면 전역에 추가
+  if(S.active){
+    if(!S.active.waypoints)S.active.waypoints=[];
+    S.active.waypoints.push(wp);
+    saveToStorage();
+  } else {
+    S.waypoints.push(wp);
+  }
+  closeWpModal();
+  draw();
+  toast("📍 "+name+" 등록됨");
+}
+
+function wpTypeLabel(type){
+  const m={waypoint:"웨이포인트",water:"식수대",danger:"위험구간",summit:"정상",
+    camp:"대피소",toilet:"화장실",parking:"주차장",food:"식당",info:"안내판"};
+  return m[type]||"웨이포인트";
+}
+
+function toggleManual(){
+  const box=document.getElementById("manual-box");
+  const arrow=document.getElementById("manual-arrow");
+  const isOpen=box.style.display!=="none";
+  box.style.display=isOpen?"none":"block";
+  arrow.textContent=isOpen?"▼ 펼치기":"▲ 닫기";
+}
+
+function wpSymIcon(sym){
+  const s=sym.toLowerCase();
+  if(s.includes("water")||s.includes("식수"))return"💧";
+  if(s.includes("danger")||s.includes("위험"))return"⚠️";
+  if(s.includes("camp")||s.includes("캠프")||s.includes("대피"))return"🏕️";
+  if(s.includes("summit")||s.includes("peak")||s.includes("정상"))return"🔺";
+  if(s.includes("parking")||s.includes("주차"))return"🅿️";
+  if(s.includes("toilet")||s.includes("화장실"))return"🚻";
+  if(s.includes("food")||s.includes("식당"))return"🍱";
+  if(s.includes("info")||s.includes("안내"))return"ℹ️";
+  if(s.includes("start")||s.includes("출발"))return"🚩";
+  if(s.includes("end")||s.includes("도착"))return"🏁";
+  return"📍";
+}
+
+function hav(la,lo,lb,lb2){
+  const R=6371000,dLat=(lb-la)*Math.PI/180,dLon=(lb2-lo)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(la*Math.PI/180)*Math.cos(lb*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function fmtDur(ms){
+  if(!ms)return "—";
+  const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);
+  return h>0?h+"h "+p2(m%60)+"m":m+"m "+p2(s%60)+"s";
+}
+
+function fmtDate(id){
+  const d=new Date(id);
+  return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
+}
+
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove("on"),2200);
+}
+
+function saveToStorage(){
+  try{
+    // 포인트 수 제한 없이 전체 저장
+    // localStorage 용량 초과 시 포인트를 균등 샘플링해서 저장
+    const lite=S.tracks.map(t=>{
+      const pts=t.points;
+      if(pts.length<=5000)return{...t,points:pts};
+      // 5000개 초과 시 균등 샘플링 (시작/끝 포인트는 항상 포함)
+      const step=pts.length/5000;
+      const sampled=[pts[0]];
+      for(let i=1;i<pts.length-1;i++){
+        if(Math.round(i/step)*step===i)sampled.push(pts[i]);
+      }
+      sampled.push(pts[pts.length-1]);
+      return{...t,points:sampled};
+    });
+    localStorage.setItem("tracks",JSON.stringify(lite));
+  }catch(e){
+    // 저장 실패(용량 초과)시 각 트랙 1000포인트로 축소 재시도
+    try{
+      const mini=S.tracks.map(t=>{
+        const pts=t.points;
+        if(pts.length<=1000)return{...t,points:pts};
+        const step=Math.floor(pts.length/1000);
+        const s=[pts[0]];
+        for(let i=step;i<pts.length-1;i+=step)s.push(pts[i]);
+        s.push(pts[pts.length-1]);
+        return{...t,points:s};
+      });
+      localStorage.setItem("tracks",JSON.stringify(mini));
+    }catch(e2){}
+  }
+}
+
+function loadFromStorage(){
+  try{
+    const d=localStorage.getItem("tracks");
+    if(d){S.tracks=JSON.parse(d);if(S.tracks.length)S.active=S.tracks[0];}
+  }catch(e){}
+}
+
+let sortMode='date';
+function setSortMode(m){
+  sortMode=m;
+  ['date','name','dist'].forEach(k=>{
+    document.getElementById('sort-'+k).classList.toggle('on',k===m);
+  });
+  renderTracks();
+}
+
+function getSortedTracks(){
+  const arr=[...S.tracks.map((t,i)=>({t,i}))];
+  if(sortMode==='name') arr.sort((a,b)=>a.t.name.localeCompare(b.t.name,'ko'));
+  else if(sortMode==='dist') arr.sort((a,b)=>b.t.distance-a.t.distance);
+  else arr.sort((a,b)=>b.t.id-a.t.id);
+  return arr;
+}
+
+function renderTracks(){
+  const list=document.getElementById("tlist");
+  const te=document.getElementById("te");
+  const cnt=document.getElementById("cnt");
+  cnt.textContent=S.tracks.length+"개";
+  if(!S.tracks.length){te.style.display="flex";return}
+  te.style.display="none";
+  const sorted=getSortedTracks();
+  const cards=sorted.map(({t,i})=>{
+    const isActive=S.active&&S.active.id===t.id;
+    const src=t.source==='gpx'?'GPX':'기록';
+    const srcColor=t.source==='gpx'?'#60a5fa':'#4ade80';
+    const elevInfo=t.elevMax?`<span>⛰ <b>${Math.round(t.elevMax)}m</b></span>`:'';
+    return`<div class="tcard-row${isActive?" sel":""}" onclick="selectTrackAndGo(${i})">
+      <div class="tcard-bar" style="background:${t.color||"#4488ff"}"></div>
+      <div class="tcard-main">
+        <div class="tcard-name">${t.name}<span class="tcard-src" style="border-color:${srcColor};color:${srcColor}">${src}</span></div>
+        <div class="tcard-meta">
+          <span>📏 <b>${(t.distance/1000).toFixed(2)}km</b></span>
+          <span>⏱ <b>${fmtDur(t.duration)}</b></span>
+          ${elevInfo}
+          <span>📅 <b>${fmtDate(t.id)}</b></span>
+        </div>
+      </div>
+      <div class="tcard-acts">
+        <div class="tcb vw" onclick="event.stopPropagation();viewTrack(${i})" title="상세정보">👁</div>
+        <div class="tcb" onclick="event.stopPropagation();deleteTrack(${i})" title="삭제">🗑</div>
+      </div>
+    </div>`;
+  }).join("");
+  list.innerHTML=cards+`<div class="empty" style="position:relative;padding:30px 0;display:none" id="te"><div class="ei">📂</div><p>저장된 트랙이 없습니다</p></div>`;
+}
+
+function selectTrackAndGo(i){
+  S.active=S.tracks[i];
+  renderTracks();
+  // 지도로 바로 이동
+  const t=S.active;
+  if(!t||!t.points||!t.points.length)return;
+  const lats=t.points.map(p=>p.lat),lngs=t.points.map(p=>p.lng);
+  S.cy=(Math.min(...lats)+Math.max(...lats))/2;
+  S.cx=(Math.min(...lngs)+Math.max(...lngs))/2;
+  S.zoom=fitZoom(Math.min(...lats),Math.max(...lats),Math.min(...lngs),Math.max(...lngs));
+  switchTab("map"); draw();
+  toast("\""+t.name+"\" 지도로 이동");
+}
+
+function selectTrack(i){
+  S.active=S.tracks[i];
+  renderTracks();
+}
+
+function viewTrack(i){
+  S.active=S.tracks[i];
+  renderTracks();
+  showModal(S.tracks[i]);
+}
+
+function goToTrackMap(){
+  closeModal();
+  const t=S.active;
+  if(!t)return;
+  const lats=t.points.map(p=>p.lat),lngs=t.points.map(p=>p.lng);
+  S.cy=(Math.min(...lats)+Math.max(...lats))/2;
+  S.cx=(Math.min(...lngs)+Math.max(...lngs))/2;
+  S.zoom=fitZoom(Math.min(...lats),Math.max(...lats),Math.min(...lngs),Math.max(...lngs));
+  switchTab("map"); draw();
+}
+
+function deleteTrack(i){
+  S.tracks.splice(i,1);
+  if(S.active===S.tracks[i])S.active=S.tracks[0]||null;
+  saveToStorage(); renderTracks();
+  toast("트랙 삭제됨");
+}
+
+function showModal(t){
+  document.getElementById("mn").textContent=t.name;
+  document.getElementById("md1").textContent=(t.distance/1000).toFixed(2);
+  document.getElementById("md2").textContent=fmtDur(t.duration);
+  document.getElementById("md3").textContent=t.elevMax?Math.round(t.elevMax):"—";
+  document.getElementById("md4").textContent=t.elevMin?Math.round(t.elevMin):"—";
+  document.getElementById("md5").textContent=t.elevGain||"—";
+  document.getElementById("md8").textContent=t.points.length.toLocaleString();
+
+  // 평균/최고 속도 계산
+  const pts=t.points;
+  let avgSpd="—", maxSpd="—";
+  if(t.duration&&t.distance){
+    avgSpd=((t.distance/1000)/(t.duration/3600000)).toFixed(1);
+  }
+  // 포인트간 속도 계산
+  let mxs=0;
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].time&&pts[i-1].time){
+      const dt=(pts[i].time-pts[i-1].time)/3600000;
+      if(dt>0){
+        const ds=hav(pts[i-1].lat,pts[i-1].lng,pts[i].lat,pts[i].lng)/1000;
+        const spd=ds/dt;
+        if(spd>mxs&&spd<50)mxs=spd;
+      }
+    }
+  }
+  document.getElementById("md6").textContent=avgSpd;
+  document.getElementById("md7").textContent=mxs>0?mxs.toFixed(1):"—";
+
+  // 시작/종료 시각
+  const tEl=document.getElementById("md-time");
+  const hasTime=pts[0]&&pts[0].time;
+  if(hasTime){
+    const st=new Date(pts[0].time);
+    const et=new Date(pts[pts.length-1].time);
+    const fmt=d=>d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());
+    tEl.innerHTML="🕐 출발: <b>"+fmt(st)+"</b><br>🏁 도착: <b>"+fmt(et)+"</b>";
+    tEl.style.display="block";
+  } else {
+    tEl.style.display="none";
+  }
+
+  // 웨이포인트
+  const wpDiv=document.getElementById("md-wp");
+  const wpList=document.getElementById("md-wplist");
+  if(t.waypoints&&t.waypoints.length){
+    wpDiv.style.display="block";
+    wpList.innerHTML=t.waypoints.map(w=>`
+      <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:9px 11px;font-size:12px">
+        <span style="color:var(--ac);font-weight:700">${w.sym||"📍"} ${w.name||"웨이포인트"}</span>
+        ${w.desc?`<div style="color:var(--tx3);margin-top:2px">${w.desc}</div>`:""}
+        ${w.ele?`<div style="color:var(--tx3)">고도: ${Math.round(w.ele)}m</div>`:""}
+      </div>`).join("");
+  } else {
+    wpDiv.style.display="none";
+  }
+
+  document.getElementById("mbg").classList.add("on");
+}
+
+function closeModal(){
+  document.getElementById("mbg").classList.remove("on");
+}
+
+function exportGPX(){
+  if(!S.active||!S.active.points.length){toast("내보낼 트랙 없음");return}
+  const t=S.active;
+  let gpx=`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="산길트랙">\n`;
+  // 웨이포인트 먼저
+  const wps=t.waypoints||[];
+  wps.forEach(w=>{
+    gpx+=`<wpt lat="${w.lat.toFixed(6)}" lon="${w.lng.toFixed(6)}">`;
+    if(w.ele)gpx+=`<ele>${w.ele.toFixed(1)}</ele>`;
+    if(w.name)gpx+=`<name>${w.name}</name>`;
+    if(w.desc)gpx+=`<desc>${w.desc}</desc>`;
+    if(w.type)gpx+=`<sym>${w.type}</sym>`;
+    gpx+=`</wpt>\n`;
+  });
+  gpx+=`<trk><name>${t.name}</name><trkseg>\n`;
+  t.points.forEach(p=>{
+    gpx+=`<trkpt lat="${p.lat.toFixed(6)}" lon="${p.lng.toFixed(6)}">`;
+    if(p.ele)gpx+=`<ele>${p.ele.toFixed(1)}</ele>`;
+    if(p.time)gpx+=`<time>${new Date(p.time).toISOString()}</time>`;
+    gpx+=`</trkpt>\n`;
+  });
+  gpx+=`</trkseg></trk></gpx>`;
+  const a=document.createElement("a");
+  a.href="data:application/gpx+xml;charset=utf-8,"+encodeURIComponent(gpx);
+  a.download=t.name.replace(/[^a-zA-Z0-9가-힣]/g,"_")+".gpx";
+  a.click();
+  toast("GPX 저장 완료");
+}
+
+window.addEventListener("resize",resize);
+loadFromStorage();
+renderTracks();
+if(S.active)drawElev(S.active);
+setTimeout(()=>{resize();requestGPS();},100);
+</script>
+</body>
+</html>
